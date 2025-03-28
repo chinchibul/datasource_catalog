@@ -9,7 +9,6 @@ import json
 
 def completa(fuente):
     url = fuente["EndPoint"]
-    print("url debería ser vacia a veces", url)
     if url:
         variables = pd.read_json(url  + '/variables')
         datos = { res:variables["available_grids"].apply(lambda x: res in x).sum() for res in resolutions}
