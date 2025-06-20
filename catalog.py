@@ -7,11 +7,11 @@ import json
 
 
 
-def completa(fuente):
-    url = fuente["EndPoint"]
+def completa(url):
     if url:
         variables = pd.read_json(url  + '/variables')
-        datos = { res:variables["available_grids"].apply(lambda x: res in x).sum() for res in resolutions}
+        datos  = { res:variables["available_grids"].apply(lambda x: res in x).sum() for res in resolutions}
+        print(datos)
         return datos
     return {}
         
@@ -40,7 +40,7 @@ def me_api():
 
 @app.route("/catalogo")
 def dsources_api():
-    mallas = catalogo.apply(completa, axis=1)
+    mallas = catalogo["EndPoint"].apply(completa)
     catalogo["Mallas"] = mallas
     catalogo["Variables"] = catalogo.apply(lambda x: x["EndPoint"] + "variables" if x["EndPoint"] != "" else "", axis=1)
     return Response(response=catalogo.to_json(orient="records"), status=200, mimetype="application/json")
