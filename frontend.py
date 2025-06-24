@@ -6,19 +6,33 @@ import json
 import pandas as pd
 
 
-catalogo_json = requests.get("http://127.0.0.1:5000/catalogo").json()
-catalogo_DF = pd.json_normalize(catalogo_json, record_prefix="Not")
-catalogo_DF.columns = [ re.sub("Mallas\.","", col) for  col in catalogo_DF.columns]
+catalogo_json = requests.get("http://127.0.0.1:8051/catalogo").json()
+#catalogo_DF = pd.json_normalize(catalogo_json, record_prefix="Not")
+catalogo_DF = pd.json_normalize(catalogo_json)
+catalogo_DF.fillna(0, inplace=True)
+
+columnas_espaciales = ['Nombre', 'Fuente original', 'Diccionario de datos', 'EndPoint']
+columnas_espaciales.extend(catalogo_DF.filter(like="spatial_ensembles", axis=1).columns.values)
+columnas_individuales = ['Nombre', 'Fuente original', 'Diccionario de datos', 'EndPoint']
+columnas_individuales.extend(catalogo_DF.filter(like="individuals_ensembles", axis=1).columns.values)
+
+df_espaciales = catalogo_DF[columnas_espaciales].copy()
+df_espaciales = df_espaciales.loc[(df_espaciales.filter(like="spatial",axis=1)!=0).any(axis=1)]
+df_individuos = catalogo_DF[columnas_individuales].copy()
+df_individuos = df_individuos.loc[(df_individuos.filter(like='individuals_ensembles', axis=1)!=0).any(axis=1)]
 catalogo_DF["EndPoint"] = catalogo_DF["EndPoint"].apply(lambda x:  "[Info de la fuente de datos](" + x + ")" if x != "" else "" )
-catalogo_DF["Variables"] = catalogo_DF["Variables"].apply(lambda x:  "[Lista de variables](" + x + ")" if x != "" else "" )
 # Initialize the app
 app = Dash()
 
 # App layout
 app.layout = [
     html.Div(children=html.H1("Catálogo de datos CHILAM")),
-    dash_table.DataTable(data=catalogo_DF.to_dict('records'), page_size=10,
-                         columns = [{'id': x, 'name': x, 'presentation': 'markdown'}  for x in catalogo_DF.columns])
+    html.Div(children=html.H1("Ensambles espaciales")),
+    dash_table.DataTable(data=df_espaciales.to_dict('records'), page_size=10,
+                         columns = [{'id': x, 'name': x.replace("spatial_ensembles.",""), 'presentation': 'markdown'}  for x in df_espaciales.columns]),
+    html.Div(children=html.H1("Ensambles de individuos")),
+    dash_table.DataTable(data=df_individuos.to_dict('records'), page_size=10,
+                         columns = [{'id': x, 'name': x.replace("individuals_ensembles.",""), 'presentation': 'markdown'}  for x in df_individuos.columns])
 ]
 
 # Run the app
