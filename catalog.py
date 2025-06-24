@@ -38,7 +38,7 @@ def get_individuals_ensembles_from_source(url, spatial_ensembles):
         variables = pd.read_json(url  + '/variables')
         not_spatial_ensembles = variables["available_grids"].apply(lambda x: list(set(x) - set(spatial_ensembles)))
         not_spatials = set(itertools.chain.from_iterable(not_spatial_ensembles.values))
-        individuals_ensembles = { res:variables["available_grids"].apply(lambda x: ensemble in x).sum() for ensemble in not_spatials}
+        individuals_ensembles = { ensemble:variables["available_grids"].apply(lambda x: ensemble in x).sum() for ensemble in not_spatials}
         return individuals_ensembles
     return {}
 
