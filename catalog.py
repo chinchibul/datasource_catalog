@@ -42,16 +42,23 @@ def get_individuals_ensembles_from_source(url, spatial_ensembles):
         return individuals_ensembles
     return {}
 
+def get_info(url):
 
+    info = pd.read_json(f'{url}/info')
+    return info
+    
 def get_df_catalogo():
     '''
     crea un DF con el catálogo 'oficial'. Para pruebas, este último es ahora un .csv local
     pero en un futuro puede ser una BD o un objeto en MINIO.
     '''
-    catalogo = pd.read_csv("catalogo.csv")
+    catalogo = pd.read_csv("catalogo_simple.csv")
     catalogo.fillna("", inplace=True) #read_csv llena con NaNs los vacios. con esto, los regresamos a vacios.
     return catalogo
 
+
+    
+    
 spatial_ensembles = get_spatial_ensembles_names(url_spatial_ensembles)
 catalogo = get_df_catalogo()
 
@@ -68,7 +75,9 @@ def dsources_api():
     catalogo["spatial_ensembles"] = catalogo["EndPoint"].apply(get_spatial_ensembles_from_source,
                                                                spatial_ensembles=spatial_ensembles)
     catalogo["individuals_ensembles"] = catalogo["EndPoint"].apply(get_individuals_ensembles_from_source,
-                                                                   spatial_ensembles=spatial_ensembles) 
+                                                                   spatial_ensembles=spatial_ensembles)
+    catalogo["info"] = catalogo["EndPoint"].apply(get_info)
+
     return Response(response=catalogo.to_json(orient="records"), status=200, mimetype="application/json")
 
 
