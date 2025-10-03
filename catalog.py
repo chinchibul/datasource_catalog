@@ -44,7 +44,7 @@ def get_individuals_ensembles_from_source(url, spatial_ensembles):
 
 def get_info(url):
 
-    info = pd.read_json(f'{url}/info')
+    info = requests.get(f'{url}/info').json()
     return info
     
 def get_df_catalogo():
@@ -76,10 +76,10 @@ def dsources_api():
                                                                spatial_ensembles=spatial_ensembles)
     catalogo["individuals_ensembles"] = catalogo["EndPoint"].apply(get_individuals_ensembles_from_source,
                                                                    spatial_ensembles=spatial_ensembles)
-    catalogo["info"] = catalogo["EndPoint"].apply(get_info)
-
-    return Response(response=catalogo.to_json(orient="records"), status=200, mimetype="application/json")
+    metainfo = pd.json_normalize(catalogo["EndPoint"].apply(get_info))
+    catalogo2 = pd.concat([catalogo, metainfo], axis=1)
+    return Response(response=catalogo2.to_json(orient="records"), status=200, mimetype="application/json")
 
 
 if __name__ == "__main__":
-        app.run_server(debug=True, port=8051, host='0.0.0.0')
+        app.run(debug=False, port=8059, host='0.0.0.0')
